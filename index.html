@@ -20,13 +20,23 @@
     var defaultLat = -26.707930;
     var defaultLng = 27.101352;
 
-    // Initialize the map properly
+    // Initialize the map correctly
     var map = L.map('map').setView([defaultLat, defaultLng], 13);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-    // Ensure marker is created after the map is ready
-    var marker = L.marker([defaultLat, defaultLng]).addTo(map);
+    // Custom red marker icon
+    var redIcon = L.icon({
+        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
+        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41]
+    });
+
+    // Create marker with red icon at default location
+    var marker = L.marker([defaultLat, defaultLng], { icon: redIcon }).addTo(map);
 
     function sendToJotForm(lat, lng, address) {
         let jotformURL = `https://form.jotform.com/250472161651552?latitude=${lat}&longitude=${lng}&address=${encodeURIComponent(address)}`;
@@ -45,12 +55,14 @@
             .catch(error => console.error("Reverse geocoding failed:", error));
     }
 
-    // Run reverse geocoding on the default location when the map loads
+    // Ensure the correct location is set when the map is ready
     map.whenReady(() => {
+        map.setView([defaultLat, defaultLng], 13);
+        marker.setLatLng([defaultLat, defaultLng]);
         reverseGeocode(defaultLat, defaultLng);
     });
 
-    // Handle user clicks to move marker and fetch new address
+    // Handle map clicks to update marker location
     map.on('click', function(e) {
         var lat = e.latlng.lat;
         var lng = e.latlng.lng;
