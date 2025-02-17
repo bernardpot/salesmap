@@ -27,14 +27,16 @@
     }
 
     function reverseGeocode(lat, lng) {
-      fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`)
-        .then(response => response.json())
-        .then(data => {
-          let address = data.display_name || "Address not found";
-          sendToJotForm(lat, lng, address);
-        });
-    }
-
+  fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`)
+    .then(response => response.json())
+    .then(data => {
+      let address = data.address.road 
+                  ? `${data.address.road}, ${data.address.city || data.address.town}, ${data.address.state}, ${data.address.country}` 
+                  : "Address not found";
+      sendToJotForm(lat, lng, address);
+    })
+    .catch(error => console.error("Reverse geocoding failed:", error));
+}
     map.on('click', function(e) {
       var lat = e.latlng.lat;
       var lng = e.latlng.lng;
