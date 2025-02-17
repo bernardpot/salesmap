@@ -34,10 +34,11 @@
     <div id="map"></div>
     
     <!-- Hidden Inputs for Latitude, Longitude, and Address -->
-    <form id="locationForm">
+    <form id="locationForm" action="https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec" method="POST">
         <input type="hidden" id="latitude" name="latitude">
         <input type="hidden" id="longitude" name="longitude">
         <input type="hidden" id="address" name="address">
+        <button type="submit" id="submitForm" style="display: none;"></button>
     </form>
 
     <div id="notification">Location has been captured!</div>
@@ -71,6 +72,12 @@
                 document.getElementById('longitude').value = lng;
                 document.getElementById('address').value = address || "Address not found";
                 document.getElementById('addressSearch').value = address || "Address not found";
+                
+                console.log("Updated Fields →", {
+                    latitude: lat,
+                    longitude: lng,
+                    address: address
+                });
             }
 
             // Reverse Geocoding
@@ -129,6 +136,9 @@
 
                     alert('Location confirmed! \nLatitude: ' + latVal + '\nLongitude: ' + lngVal + '\nAddress: ' + address);
                     document.getElementById('notification').style.display = 'block';
+
+                    // Submit Form to Google Sheets after confirmation
+                    document.getElementById('submitForm').click();
                 }, 1200);
             });
 
