@@ -26,17 +26,18 @@
 
     <!-- Address Display & Search Bar -->
     <div id="topBar">
-        <input type="text" id="addressSearch" name="address" placeholder="Search or click on the map..." readonly />
+        <input type="text" id="addressSearch" placeholder="Search or click on the map..." readonly />
         <button id="confirmLocationButton">Confirm Location</button>
     </div>
 
     <!-- Map -->
     <div id="map"></div>
     
-    <!-- Hidden Inputs for Latitude & Longitude -->
+    <!-- Hidden Inputs for Latitude, Longitude, and Address -->
     <form id="locationForm">
         <input type="hidden" id="latitude" name="latitude">
         <input type="hidden" id="longitude" name="longitude">
+        <input type="hidden" id="address" name="address">
     </form>
 
     <div id="notification">Location has been captured!</div>
@@ -68,6 +69,7 @@
             function updateFields(lat, lng, address) {
                 document.getElementById('latitude').value = lat;
                 document.getElementById('longitude').value = lng;
+                document.getElementById('address').value = address || "Address not found";
                 document.getElementById('addressSearch').value = address || "Address not found";
             }
 
@@ -110,14 +112,24 @@
             document.getElementById('confirmLocationButton').addEventListener('click', function () {
                 var lat = marker.getLatLng().lat;
                 var lng = marker.getLatLng().lng;
+                
+                // Reverse geocode before confirming
                 reverseGeocode(lat, lng);
                 
                 // Delay alert until address is fully updated
                 setTimeout(() => {
-                    var address = document.getElementById('addressSearch').value;
-                    alert('Location confirmed! \nLatitude: ' + lat + '\nLongitude: ' + lng + '\nAddress: ' + address);
+                    var address = document.getElementById('address').value;
+                    var latVal = document.getElementById('latitude').value;
+                    var lngVal = document.getElementById('longitude').value;
+
+                    if (!address || !latVal || !lngVal) {
+                        alert("Error: Location details are missing. Try again.");
+                        return;
+                    }
+
+                    alert('Location confirmed! \nLatitude: ' + latVal + '\nLongitude: ' + lngVal + '\nAddress: ' + address);
                     document.getElementById('notification').style.display = 'block';
-                }, 1000);
+                }, 1200);
             });
 
             // Set default location address
