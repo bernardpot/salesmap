@@ -24,13 +24,21 @@
 </head>
 <body>
 
-    <!-- Address Display & Search Bar at the Top -->
+    <!-- Address Display & Search Bar -->
     <div id="topBar">
-        <input type="text" id="addressSearch" placeholder="Search or click on the map..." readonly />
+        <input type="text" id="addressSearch" name="address" placeholder="Search or click on the map..." readonly />
         <button id="confirmLocationButton">Confirm Location</button>
     </div>
 
+    <!-- Map -->
     <div id="map"></div>
+    
+    <!-- Hidden Inputs for Latitude & Longitude -->
+    <form id="locationForm">
+        <input type="hidden" id="latitude" name="latitude">
+        <input type="hidden" id="longitude" name="longitude">
+    </form>
+
     <div id="notification">Location has been captured!</div>
 
     <script>
@@ -45,7 +53,7 @@
                 attribution: '&copy; <a href="https://www.esri.com/">Esri</a> Contributors'
             }).addTo(map);
 
-            // Correct Marker Icon
+            // Marker Icon
             var marker = L.marker([defaultLat, defaultLng], {
                 icon: L.icon({
                     iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
@@ -56,24 +64,30 @@
                 })
             }).addTo(map);
 
-            // Function to reverse geocode (get address from lat/lng)
+            // Function to update fields
+            function updateFields(lat, lng, address) {
+                document.getElementById('latitude').value = lat;
+                document.getElementById('longitude').value = lng;
+                document.getElementById('addressSearch').value = address || "Address not found";
+            }
+
+            // Reverse Geocoding
             function reverseGeocode(lat, lng) {
                 fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`)
                     .then(response => response.json())
                     .then(data => {
-                        console.log("Geocoding Response:", data);
                         let houseNumber = data.address.house_number || "";
                         let road = data.address.road || "";
                         let city = data.address.city || data.address.town || "";
                         let state = data.address.state || "";
                         let country = data.address.country || "";
                         let fullAddress = `${houseNumber} ${road}, ${city}, ${state}, ${country}`.trim();
-                        document.getElementById('addressSearch').value = fullAddress !== "," ? fullAddress : "Address not found";
+                        updateFields(lat, lng, fullAddress);
                     })
                     .catch(error => console.error("Reverse geocoding failed:", error));
             }
 
-            // Click on map to move marker & get address
+            // Click on map to update marker & fields
             map.on('click', function (e) {
                 var lat = e.latlng.lat;
                 var lng = e.latlng.lng;
