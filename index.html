@@ -1,77 +1,110 @@
-<script>
-  document.addEventListener("DOMContentLoaded", function () {
-      var defaultLat = -26.707930;
-      var defaultLng = 27.101352;
-      
-      var map = L.map('map').setView([defaultLat, defaultLng], 13);
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Location Picker</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+    
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 
-      // Use Satellite map tiles
-      L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-          attribution: '&copy; <a href="https://www.esri.com/">Esri</a> Contributors'
-      }).addTo(map);
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; }
+        #map { height: 400px; width: 100%; margin-top: 10px; }
+        input { width: 90%; padding: 8px; margin: 5px; }
+        #notification { margin-top: 10px; font-size: 16px; color: green; display: none; }
+        #confirmLocationButton { margin-top: 10px; padding: 8px 20px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h2>Select Your Location</h2>
+    <input type="text" id="addressSearch" placeholder="Search for an address..." readonly />
+    <div id="map"></div>
+    <button id="confirmLocationButton">Confirm Location</button>
+    <div id="notification">Location has been captured!</div>
 
-      // Marker with fixed icon
-      var marker = L.marker([defaultLat, defaultLng], {
-          icon: L.icon({
-              iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
-              shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
-              iconSize: [25, 41],
-              iconAnchor: [12, 41],
-              popupAnchor: [1, -34]
-          })
-      }).addTo(map);
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            var defaultLat = -26.707930;
+            var defaultLng = 27.101352;
 
-      // Function to get address from lat/lng
-      function reverseGeocode(lat, lng) {
-          fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`)
-            .then(response => response.json())
-            .then(data => {
-              console.log("Geocoding Response:", data);
-              let houseNumber = data.address.house_number || "";
-              let road = data.address.road || "";
-              let city = data.address.city || data.address.town || "";
-              let state = data.address.state || "";
-              let country = data.address.country || "";
-              let fullAddress = `${houseNumber} ${road}, ${city}, ${state}, ${country}`.trim();
-              document.getElementById('addressSearch').value = fullAddress !== "," ? fullAddress : "Address not found";
-            })
-            .catch(error => console.error("Reverse geocoding failed:", error));
-      }
+            var map = L.map('map').setView([defaultLat, defaultLng], 13);
 
-      // Handle map clicks to move marker and update address
-      map.on('click', function (e) {
-          var lat = e.latlng.lat;
-          var lng = e.latlng.lng;
-          marker.setLatLng([lat, lng]);
-          reverseGeocode(lat, lng);
-      });
+            // Use Satellite tiles
+            L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                attribution: '&copy; <a href="https://www.esri.com/">Esri</a> Contributors'
+            }).addTo(map);
 
-      // Search bar functionality (Hidden until clicked)
-      var searchControl = L.Control.geocoder({
-          geocoder: L.Control.Geocoder.nominatim(),
-          defaultMarkGeocode: false,
-          collapsed: true // Keeps search bar hidden until clicked
-      }).on('markgeocode', function(e) {
-          var latlng = e.geocode.center;
-          marker.setLatLng(latlng);
-          map.setView(latlng, 15);
-          reverseGeocode(latlng.lat, latlng.lng);
-      }).addTo(map);
+            // Correct Marker Icon
+            var marker = L.marker([defaultLat, defaultLng], {
+                icon: L.icon({
+                    iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
+                    shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
+                    iconSize: [25, 41],
+                    iconAnchor: [12, 41],
+                    popupAnchor: [1, -34]
+                })
+            }).addTo(map);
 
-      // Confirm location button event
-      document.getElementById('confirmLocationButton').addEventListener('click', function () {
-          var lat = marker.getLatLng().lat;
-          var lng = marker.getLatLng().lng;
-          reverseGeocode(lat, lng);
-          
-          setTimeout(() => {
-              var address = document.getElementById('addressSearch').value;
-              alert('Location confirmed! \nLatitude: ' + lat + '\nLongitude: ' + lng + '\nAddress: ' + address);
-              document.getElementById('notification').style.display = 'block';
-          }, 1000);
-      });
+            // Function to reverse geocode (get address from lat/lng)
+            function reverseGeocode(lat, lng) {
+                fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log("Geocoding Response:", data);
+                        let houseNumber = data.address.house_number || "";
+                        let road = data.address.road || "";
+                        let city = data.address.city || data.address.town || "";
+                        let state = data.address.state || "";
+                        let country = data.address.country || "";
+                        let fullAddress = `${houseNumber} ${road}, ${city}, ${state}, ${country}`.trim();
+                        document.getElementById('addressSearch').value = fullAddress !== "," ? fullAddress : "Address not found";
+                    })
+                    .catch(error => console.error("Reverse geocoding failed:", error));
+            }
 
-      // Set default location address
-      reverseGeocode(defaultLat, defaultLng);
-  });
-</script>
+            // Click on map to move marker & get address
+            map.on('click', function (e) {
+                var lat = e.latlng.lat;
+                var lng = e.latlng.lng;
+                marker.setLatLng([lat, lng]);
+                reverseGeocode(lat, lng);
+            });
+
+            // Search Bar (Fixed empty block issue)
+            var searchControl = L.Control.geocoder({
+                geocoder: L.Control.Geocoder.nominatim(),
+                defaultMarkGeocode: false,
+                collapsed: false // Keep search bar open
+            }).on('markgeocode', function (e) {
+                var latlng = e.geocode.center;
+                marker.setLatLng(latlng);
+                map.setView(latlng, 15);
+                reverseGeocode(latlng.lat, latlng.lng);
+            }).addTo(map);
+
+            // Confirm location button
+            document.getElementById('confirmLocationButton').addEventListener('click', function () {
+                var lat = marker.getLatLng().lat;
+                var lng = marker.getLatLng().lng;
+                reverseGeocode(lat, lng);
+                
+                // Delay alert until address is fully updated
+                setTimeout(() => {
+                    var address = document.getElementById('addressSearch').value;
+                    alert('Location confirmed! \nLatitude: ' + lat + '\nLongitude: ' + lng + '\nAddress: ' + address);
+                    document.getElementById('notification').style.display = 'block';
+                }, 1000);
+            });
+
+            // Set default location address
+            reverseGeocode(defaultLat, defaultLng);
+        });
+    </script>
+</body>
+</html>
