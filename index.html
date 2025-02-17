@@ -49,16 +49,23 @@
 
       // Reverse geocoding (get address from lat, lng)
       function reverseGeocode(lat, lng) {
-        fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`)
-          .then(response => response.json())
-          .then(data => {
-            let address = data.address.road
-              ? `${data.address.house_number || ''} ${data.address.road}, ${data.address.city || data.address.town}, ${data.address.state}, ${data.address.country}`
-              : "Address not found";
-            document.getElementById('addressSearch').value = address; // Set address input field with address
-          })
-          .catch(error => console.error("Reverse geocoding failed:", error));
-      }
+    fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`)
+      .then(response => response.json())
+      .then(data => {
+        console.log("Geocoding Response:", data); // Debugging line to see full API response
+
+        let houseNumber = data.address.house_number || "";
+        let road = data.address.road || "";
+        let city = data.address.city || data.address.town || "";
+        let state = data.address.state || "";
+        let country = data.address.country || "";
+        let fullAddress = `${houseNumber} ${road}, ${city}, ${state}, ${country}`.trim();
+
+        document.getElementById('addressSearch').value = fullAddress !== "," ? fullAddress : "Address not found"; 
+      })
+      .catch(error => console.error("Reverse geocoding failed:", error));
+}
+
 
       // Trigger geocoding on map click
       map.on('click', function (e) {
