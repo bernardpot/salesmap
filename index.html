@@ -32,70 +32,76 @@
 
   <script>
     // Initial Map Setup
-    var map = L.map('map').setView([-26.707930, 27.101352], 13); // Default view
+    var map = L.map('map').setView([-26.707930, 27.101352], 13);  // Default coordinates for map
 
-    // Add Satellite View Tile Layer (using Mapbox)
+    // Satellite Tile Layer (Mapbox)
     L.tileLayer('https://api.mapbox.com/styles/v1/mapbox/satellite-v9/tiles/{z}/{x}/{y}?access_token=YOUR_MAPBOX_ACCESS_TOKEN', {
       attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, ' +
         '<a href="https://www.mapbox.com/about/maps/">Imagery © Mapbox</a>',
+      tileSize: 512,
+      zoomOffset: -1
     }).addTo(map);
 
-    // Initialize Geocoder for Searching Addresses
-    var geocoder = L.Control.Geocoder.nominatim();
+    // Marker Variable
     var marker;
 
-    // Store Selected Location
-    let selectedLat, selectedLng, selectedAddress;
+    // Geocoder for Address Search
+    var geocoder = L.Control.Geocoder.nominatim();
 
-    // Handle Map Click to Select Location
+    // Store the selected location data
+    var selectedLat, selectedLng, selectedAddress;
+
+    // Handle Map Click Event
     map.on('click', function(event) {
       selectedLat = event.latlng.lat;
       selectedLng = event.latlng.lng;
 
-      // Reverse Geocode the selected location
-      geocoder.reverse([selectedLat, selectedLng], map.options.crs.scale(map.getZoom()), function(results) {
-        selectedAddress = results[0].formatted_address;
-        console.log('Selected Address:', selectedAddress);
-
-        // Display the address in the search field
-        document.getElementById('addressSearch').value = selectedAddress;
-      });
-
-      // Add marker to the map
+      // Place marker on the map
       if (marker) {
         marker.setLatLng(event.latlng);
       } else {
         marker = L.marker(event.latlng).addTo(map);
       }
+
+      // Reverse Geocode to get the address
+      geocoder.reverse([selectedLat, selectedLng], map.options.crs.scale(map.getZoom()), function(results) {
+        if (results.length > 0) {
+          selectedAddress = results[0].formatted_address;
+          document.getElementById('addressSearch').value = selectedAddress;
+        }
+      });
     });
 
-    // Handle Address Search (autocomplete and map movement)
+    // Handle Address Search Input
     document.getElementById('addressSearch').addEventListener('input', function() {
       var query = this.value;
       if (query) {
         geocoder.geocode(query, function(results) {
           if (results.length > 0) {
-            // Update map and marker with the searched location
             var latLng = results[0].center;
             map.setView(latLng, 13);
             selectedLat = latLng.lat;
             selectedLng = latLng.lng;
             selectedAddress = results[0].name;
+
+            // Place marker on the map
             if (marker) {
               marker.setLatLng(latLng);
             } else {
               marker = L.marker(latLng).addTo(map);
             }
+
+            // Update the address field
             document.getElementById('addressSearch').value = selectedAddress;
           }
         });
       }
     });
 
-    // Handle "Confirm Location" Button Click
+    // Confirm Location Button
     document.getElementById('confirmLocationButton').addEventListener('click', function() {
       if (selectedLat && selectedLng && selectedAddress) {
-        // Send the confirmed location data to the parent (JotForm)
+        // Send the confirmed location to the parent (JotForm)
         window.parent.postMessage({
           type: 'locationSelected',
           latitude: selectedLat,
@@ -103,7 +109,7 @@
           address: selectedAddress
         }, '*');  // Use the correct origin if needed, or '*' to allow any origin
 
-        // Show success notification
+        // Show Success Notification
         document.getElementById('notification').style.display = 'block';
 
         // Hide the notification after 2 seconds
