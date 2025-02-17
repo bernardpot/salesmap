@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Location Picker</title>
+  <title>Location Picker1</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <style>
@@ -35,8 +35,14 @@
         shadowSize: [41, 41]
     });
 
-    // Create marker with red icon at default location
-    var marker = L.marker([defaultLat, defaultLng], { icon: redIcon }).addTo(map);
+    var marker;
+
+    // Ensure the map is fully rendered before adding the marker
+    map.whenReady(() => {
+        map.setView([defaultLat, defaultLng], 13); // Force correct location
+        marker = L.marker([defaultLat, defaultLng], { icon: redIcon }).addTo(map);
+        reverseGeocode(defaultLat, defaultLng);
+    });
 
     function sendToJotForm(lat, lng, address) {
         let jotformURL = `https://form.jotform.com/250472161651552?latitude=${lat}&longitude=${lng}&address=${encodeURIComponent(address)}`;
@@ -54,13 +60,6 @@
             })
             .catch(error => console.error("Reverse geocoding failed:", error));
     }
-
-    // Ensure the correct location is set when the map is ready
-    map.whenReady(() => {
-        map.setView([defaultLat, defaultLng], 13);
-        marker.setLatLng([defaultLat, defaultLng]);
-        reverseGeocode(defaultLat, defaultLng);
-    });
 
     // Handle map clicks to update marker location
     map.on('click', function(e) {
