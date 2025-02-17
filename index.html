@@ -19,47 +19,45 @@
   <script>
     var defaultLat = -26.707930;
     var defaultLng = 27.101352;
-    
-    var map = L.map('map');
 
-    // Ensure the map initializes after DOM is fully loaded
-    setTimeout(() => {
-        map.setView([defaultLat, defaultLng], 13);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-        
-        var marker = L.marker([defaultLat, defaultLng]).addTo(map);
+    // Initialize the map properly
+    var map = L.map('map').setView([defaultLat, defaultLng], 13);
 
-        // Force re-render to ensure visibility
-        map.invalidateSize();
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-        function sendToJotForm(lat, lng, address) {
-            let jotformURL = `https://form.jotform.com/250472161651552?latitude=${lat}&longitude=${lng}&address=${encodeURIComponent(address)}`;
-            window.location.href = jotformURL;
-        }
+    // Ensure marker is created after the map is ready
+    var marker = L.marker([defaultLat, defaultLng]).addTo(map);
 
-        function reverseGeocode(lat, lng) {
-            fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`)
-                .then(response => response.json())
-                .then(data => {
-                    let address = data.address.road 
-                                ? `${data.address.road}, ${data.address.city || data.address.town}, ${data.address.state}, ${data.address.country}` 
-                                : "Address not found";
-                    sendToJotForm(lat, lng, address);
-                })
-                .catch(error => console.error("Reverse geocoding failed:", error));
-        }
+    function sendToJotForm(lat, lng, address) {
+        let jotformURL = `https://form.jotform.com/250472161651552?latitude=${lat}&longitude=${lng}&address=${encodeURIComponent(address)}`;
+        window.location.href = jotformURL;
+    }
 
-        // Set initial reverse geocode
+    function reverseGeocode(lat, lng) {
+        fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`)
+            .then(response => response.json())
+            .then(data => {
+                let address = data.address.road 
+                            ? `${data.address.road}, ${data.address.city || data.address.town}, ${data.address.state}, ${data.address.country}` 
+                            : "Address not found";
+                sendToJotForm(lat, lng, address);
+            })
+            .catch(error => console.error("Reverse geocoding failed:", error));
+    }
+
+    // Run reverse geocoding on the default location when the map loads
+    map.whenReady(() => {
         reverseGeocode(defaultLat, defaultLng);
+    });
 
-        map.on('click', function(e) {
-            var lat = e.latlng.lat;
-            var lng = e.latlng.lng;
-            marker.setLatLng(e.latlng);
-            reverseGeocode(lat, lng);
-        });
+    // Handle user clicks to move marker and fetch new address
+    map.on('click', function(e) {
+        var lat = e.latlng.lat;
+        var lng = e.latlng.lng;
+        marker.setLatLng([lat, lng]);
+        reverseGeocode(lat, lng);
+    });
 
-    }, 500); // Small delay to ensure rendering
   </script>
 </body>
 </html>
