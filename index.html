@@ -3,72 +3,74 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Location Picker1</title>
+  <title>Location Picker</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <style>
     #map { height: 400px; width: 100%; }
     body { font-family: Arial, sans-serif; text-align: center; }
-    input { width: 90%; padding: 8px; margin: 5px; }
+    input, button { width: 90%; padding: 8px; margin: 5px; }
+    #confirmBtn { display: none; background-color: #28a745; color: white; border: none; padding: 10px; cursor: pointer; }
+    #confirmBtn:hover { background-color: #218838; }
   </style>
 </head>
 <body>
-  <h2>Select Your Location man</h2>
+  <h2>Select Your Location</h2>
   <div id="map"></div>
+  <p id="selectedLocation">Click on the map to select a location</p>
+  <button id="confirmBtn">Confirm Location</button>
 
   <script>
-    var defaultLat = -26.707930;
-    var defaultLng = 27.101352;
-
-    // Initialize the map correctly
-    var map = L.map('map').setView([defaultLat, defaultLng], 13);
-
+    var map = L.map('map').setView([-26.707930, 27.101352], 13);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-    // Custom red marker icon
-    var redIcon = L.icon({
-        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
-        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-        iconSize: [25, 41],
-        iconAnchor: [12, 41],
-        popupAnchor: [1, -34],
-        shadowSize: [41, 41]
-    });
+    var marker = L.marker([-26.707930, 27.101352], {
+        icon: L.icon({
+            iconUrl: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png',
+            iconSize: [32, 32]
+        })
+    }).addTo(map);
 
-    var marker;
+    var selectedLat, selectedLng, selectedAddress;
 
-    // Ensure the map is fully rendered before adding the marker
-    map.whenReady(() => {
-        map.setView([defaultLat, defaultLng], 13); // Force correct location
-        marker = L.marker([defaultLat, defaultLng], { icon: redIcon }).addTo(map);
-        reverseGeocode(defaultLat, defaultLng);
-    });
-
-    function sendToJotForm(lat, lng, address) {
-        let jotformURL = `https://form.jotform.com/250472161651552?latitude=${lat}&longitude=${lng}&address=${encodeURIComponent(address)}`;
-        window.location.href = jotformURL;
+    // Function to update the parent form with the selected location
+    function updateParentForm() {
+        if (selectedLat && selectedLng) {
+            // Use postMessage to send data back to the parent iframe (JotForm in this case)
+            window.parent.postMessage({
+                type: 'locationSelected',
+                latitude: selectedLat,
+                longitude: selectedLng,
+                address: selectedAddress
+            }, '*');  // '*' allows communication with any parent window. You can also specify the origin if needed.
+        }
     }
 
     function reverseGeocode(lat, lng) {
         fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`)
             .then(response => response.json())
             .then(data => {
-                let address = data.address.road 
-                            ? `${data.address.road}, ${data.address.city || data.address.town}, ${data.address.state}, ${data.address.country}` 
-                            : "Address not found";
-                sendToJotForm(lat, lng, address);
+                selectedAddress = data.address.road 
+                    ? `${data.address.road}, ${data.address.city || data.address.town}, ${data.address.state}, ${data.address.country}`
+                    : "Address not found";
+
+                document.getElementById('selectedLocation').textContent = `Selected Location: ${selectedAddress}`;
+                selectedLat = lat;
+                selectedLng = lng;
+
+                document.getElementById('confirmBtn').style.display = "block"; // Show confirm button
             })
             .catch(error => console.error("Reverse geocoding failed:", error));
     }
 
-    // Handle map clicks to update marker location
     map.on('click', function(e) {
         var lat = e.latlng.lat;
         var lng = e.latlng.lng;
-        marker.setLatLng([lat, lng]);
+        marker.setLatLng(e.latlng);
         reverseGeocode(lat, lng);
     });
 
+    document.getElementById('confirmBtn').addEventListener('click', updateParentForm);
   </script>
 </body>
 </html>
