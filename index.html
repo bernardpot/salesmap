@@ -19,16 +19,18 @@
   <script>
     var defaultLat = -26.707930;
     var defaultLng = 27.101352;
+    
     var map = L.map('map').setView([defaultLat, defaultLng], 13);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-    
-    var marker;
 
-    map.whenReady(() => {
-        marker = L.marker([defaultLat, defaultLng]).addTo(map);
-        reverseGeocode(defaultLat, defaultLng);
-    });
+    var marker = L.marker([defaultLat, defaultLng]).addTo(map);
+
+    // Delay marker update to ensure rendering
+    setTimeout(() => {
+        map.invalidateSize();
+        marker.setLatLng([defaultLat, defaultLng]);
+    }, 500); // Small delay to ensure rendering
 
     function sendToJotForm(lat, lng, address) {
         let jotformURL = `https://form.jotform.com/250472161651552?latitude=${lat}&longitude=${lng}&address=${encodeURIComponent(address)}`;
@@ -46,6 +48,9 @@
             })
             .catch(error => console.error("Reverse geocoding failed:", error));
     }
+
+    // Set initial geocode
+    reverseGeocode(defaultLat, defaultLng);
 
     map.on('click', function(e) {
         var lat = e.latlng.lat;
