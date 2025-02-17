@@ -42,8 +42,10 @@
       reverseGeocode(lat, lng);
     });
 
-    // Initialize with default location
-    reverseGeocode(-26.707930, 27.101352);
+    // Ensure reverse geocoding happens after map is fully loaded
+    map.whenReady(() => {
+      reverseGeocode(-26.707930, 27.101352);
+    });
   </script>
 </body>
 </html>
