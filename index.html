@@ -15,19 +15,14 @@
 <body>
   <h2>Select Your Location</h2>
   <div id="map"></div>
-  <input type="text" id="lat" placeholder="Latitude" readonly>
-  <input type="text" id="lng" placeholder="Longitude" readonly>
-  <input type="text" id="address" placeholder="Address" readonly>
 
   <script>
-    var map = L.map('map').setView([51.505, -0.09], 13);
+    var map = L.map('map').setView([-26.707930, 27.101352], 13);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-    var marker;
+    var marker = L.marker([-26.707930, 27.101352]).addTo(map);
 
-    function updateFields(lat, lng, address) {
-      document.getElementById('lat').value = lat;
-      document.getElementById('lng').value = lng;
-      document.getElementById('address').value = address;
+    function sendToJotForm(lat, lng, address) {
+      window.parent.postMessage({ latitude: lat, longitude: lng, address: address }, "*");
     }
 
     function reverseGeocode(lat, lng) {
@@ -35,16 +30,19 @@
         .then(response => response.json())
         .then(data => {
           let address = data.display_name || "Address not found";
-          updateFields(lat, lng, address);
+          sendToJotForm(lat, lng, address);
         });
     }
 
     map.on('click', function(e) {
       var lat = e.latlng.lat;
       var lng = e.latlng.lng;
-      if (marker) { marker.setLatLng(e.latlng); } else { marker = L.marker(e.latlng).addTo(map); }
+      marker.setLatLng(e.latlng);
       reverseGeocode(lat, lng);
     });
+
+    // Initialize with default location
+    reverseGeocode(-26.707930, 27.101352);
   </script>
 </body>
 </html>
