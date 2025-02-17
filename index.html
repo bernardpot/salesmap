@@ -22,7 +22,8 @@
     var marker = L.marker([-26.707930, 27.101352]).addTo(map);
 
     function sendToJotForm(lat, lng, address) {
-      window.parent.postMessage({ latitude: lat, longitude: lng, address: address }, "*");
+      let jotformURL = "https://form.jotform.com/250472161651552?latitude=" + lat + "&longitude=" + lng + "&address=" + encodeURIComponent(address);
+      window.location.href = jotformURL;
     }
 
     function reverseGeocode(lat, lng) {
