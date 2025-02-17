@@ -8,24 +8,29 @@
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
-    
+
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; }
+        body { font-family: Arial, sans-serif; text-align: center; margin: 0; padding: 0; }
+        #topBar { display: flex; align-items: center; justify-content: center; padding: 10px; background: #f4f4f4; }
+        #addressSearch { width: 70%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; margin-right: 10px; }
         #map { height: 400px; width: 100%; margin-top: 10px; }
-        input { width: 90%; padding: 8px; margin: 5px; }
-        #notification { margin-top: 10px; font-size: 16px; color: green; display: none; }
         #confirmLocationButton { margin-top: 10px; padding: 8px 20px; cursor: pointer; }
+        #notification { margin-top: 10px; font-size: 16px; color: green; display: none; }
     </style>
 </head>
 <body>
-    <h2>Select Your Location</h2>
-    <input type="text" id="addressSearch" placeholder="Search for an address..." readonly />
+
+    <!-- Address Display & Search Bar at the Top -->
+    <div id="topBar">
+        <input type="text" id="addressSearch" placeholder="Search or click on the map..." readonly />
+        <button id="confirmLocationButton">Confirm Location</button>
+    </div>
+
     <div id="map"></div>
-    <button id="confirmLocationButton">Confirm Location</button>
     <div id="notification">Location has been captured!</div>
 
     <script>
@@ -76,11 +81,10 @@
                 reverseGeocode(lat, lng);
             });
 
-            // Search Bar (Fixed empty block issue)
+            // Search Bar integrated into Address Input Field
             var searchControl = L.Control.geocoder({
                 geocoder: L.Control.Geocoder.nominatim(),
-                defaultMarkGeocode: false,
-                collapsed: false // Keep search bar open
+                defaultMarkGeocode: false
             }).on('markgeocode', function (e) {
                 var latlng = e.geocode.center;
                 marker.setLatLng(latlng);
