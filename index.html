@@ -34,12 +34,14 @@
         var marker = L.marker([defaultLat, defaultLng]).addTo(map);
 
         function updateJotFormField(lat, lng) {
-            var locationField = window.parent.document.querySelector('[name="Location"]'); // Replace qXX with correct field ID
+            var locationField = window.parent.document.querySelector('#input_70'); // Use correct JotForm field ID
             
             if (locationField) {
                 locationField.value = lat + ', ' + lng;
                 locationField.dispatchEvent(new Event('input', { bubbles: true }));
                 locationField.dispatchEvent(new Event('change', { bubbles: true }));
+            } else {
+                console.error("JotForm location field not found!");
             }
         }
 
