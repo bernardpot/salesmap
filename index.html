@@ -33,12 +33,6 @@
     <!-- Map -->
     <div id="map"></div>
     
-    <!-- Hidden Inputs for Latitude, Longitude, and Address -->
-    <form id="locationForm" action="https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec" method="POST">
-        <input type="hidden" id="location" name="location">
-        <button type="submit" id="submitForm" style="display: none;"></button>
-    </form>
-
     <div id="notification">Location has been captured!</div>
 
     <script>
@@ -62,10 +56,11 @@
             })
         }).addTo(map);
 
+        // Function to send location data to the parent window (JotForm)
         function updateLocation(lat, lng) {
-            // Send combined location data (latitude, longitude) to parent JotForm
+            console.log(`Sending location: ${lat}, ${lng}`);  // For debugging
             window.parent.postMessage({
-                location: `${lat},${lng}`
+                location: `${lat},${lng}`  // Combine lat and lng into one string
             }, "*");
         }
 
@@ -74,7 +69,7 @@
                 const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`);
                 const data = await response.json();
                 let fullAddress = `${data.address.road || ""}, ${data.address.city || data.address.town || ""}, ${data.address.state || ""}, ${data.address.country || ""}`.trim();
-                updateLocation(lat, lng); // Update the location with lat,lng
+                updateLocation(lat, lng); // Update the location with lat, lng
             } catch (error) {
                 console.error("Reverse geocoding failed:", error);
             }
@@ -106,7 +101,6 @@
 
         reverseGeocode(defaultLat, defaultLng);
     });
-    </script>
-
+</script>
 </body>
 </html>
