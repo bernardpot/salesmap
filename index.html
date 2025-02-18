@@ -34,7 +34,7 @@
         var marker = L.marker([defaultLat, defaultLng]).addTo(map);
 
         function updateJotFormField(lat, lng) {
-            var locationField = window.parent.document.querySelector('[name="qXX_location"]'); // Replace qXX with correct field ID
+            var locationField = window.parent.document.querySelector('[name="Location"]'); // Replace qXX with correct field ID
             
             if (locationField) {
                 locationField.value = lat + ', ' + lng;
