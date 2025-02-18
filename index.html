@@ -7,16 +7,11 @@
     
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
 
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-    <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; margin: 0; padding: 0; }
-        #topBar { display: flex; align-items: center; justify-content: center; padding: 10px; background: #f4f4f4; }
-        #addressSearch { width: 70%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; margin-right: 10px; }
         #map { height: 400px; width: 100%; margin-top: 10px; }
     </style>
 </head>
@@ -36,55 +31,25 @@
             attribution: '&copy; OpenStreetMap contributors'
         }).addTo(map);
 
-        var marker = L.marker([defaultLat, defaultLng], {
-            icon: L.icon({
-                iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
-                shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
-                iconSize: [25, 41],
-                iconAnchor: [12, 41]
-            })
-        }).addTo(map);
+        var marker = L.marker([defaultLat, defaultLng]).addTo(map);
 
-        function updateJotFormField(lat, lng, address) {
-            // Replace qXX_location with the actual JotForm field name
-            var locationField = window.parent.document.querySelector('[name="qXX_location"]');
-
+        function updateJotFormField(lat, lng) {
+            var locationField = window.parent.document.querySelector('[name="qXX_location"]'); // Replace qXX with correct field ID
+            
             if (locationField) {
-                locationField.value = address || (lat + ', ' + lng);
+                locationField.value = lat + ', ' + lng;
                 locationField.dispatchEvent(new Event('input', { bubbles: true }));
-            }
-        }
-
-        async function reverseGeocode(lat, lng) {
-            try {
-                const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`);
-                const data = await response.json();
-                let address = `${data.address.road || ""}, ${data.address.city || data.address.town || ""}, ${data.address.state || ""}, ${data.address.country || ""}`.trim();
-                
-                updateJotFormField(lat, lng, address);
-            } catch (error) {
-                console.error("Reverse geocoding failed:", error);
-                updateJotFormField(lat, lng, lat + ', ' + lng);
+                locationField.dispatchEvent(new Event('change', { bubbles: true }));
             }
         }
 
         map.on('click', function (e) {
-            var lat = e.latlng.lat;
-            var lng = e.latlng.lng;
+            var lat = e.latlng.lat.toFixed(6);
+            var lng = e.latlng.lng.toFixed(6);
             marker.setLatLng([lat, lng]);
-            reverseGeocode(lat, lng);
+            updateJotFormField(lat, lng);
         });
 
-        // Search Control
-        var searchControl = L.Control.geocoder({
-            geocoder: L.Control.Geocoder.nominatim(),
-            defaultMarkGeocode: false
-        }).on('markgeocode', function (e) {
-            var latlng = e.geocode.center;
-            marker.setLatLng(latlng);
-            map.setView(latlng, 15);
-            reverseGeocode(latlng.lat, latlng.lng);
-        }).addTo(map);
     });
     </script>
 
