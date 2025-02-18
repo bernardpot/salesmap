@@ -127,7 +127,9 @@
 
                 // Redirect with pre-filled JotForm fields
                 var jotFormURL = "https://form.jotform.com/250472161651552";
-                window.location.href = `${jotFormURL}?latitude=${latVal}&longitude=${lngVal}&address=${encodeURIComponent(address)}`;
+                var fullURL = `${jotFormURL}?latitude=${latVal}&longitude=${lngVal}&address=${encodeURIComponent(address)}`;
+
+                window.open(fullURL, "_blank"); // Opens in a new tab
             }, 1200);
         });
 
