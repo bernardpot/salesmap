@@ -18,27 +18,12 @@
         #topBar { display: flex; align-items: center; justify-content: center; padding: 10px; background: #f4f4f4; }
         #addressSearch { width: 70%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; margin-right: 10px; }
         #map { height: 400px; width: 100%; margin-top: 10px; }
-        #notification { margin-top: 10px; font-size: 16px; color: green; display: none; }
     </style>
 </head>
 <body>
 
-    <!-- Address Display & Search Bar -->
-    <div id="topBar">
-        <input type="text" id="addressSearch" placeholder="Search or click on the map..." readonly />
-    </div>
-
     <!-- Map -->
     <div id="map"></div>
-    
-    <!-- Hidden Location Field in JotForm -->
-    <form id="locationForm">
-        <input type="hidden" id="latitude" name="latitude">
-        <input type="hidden" id="longitude" name="longitude">
-        <input type="text" id="location" name="location" placeholder="Location will appear here">
-    </form>
-
-    <div id="notification">Location has been captured!</div>
 
     <script>
     document.addEventListener("DOMContentLoaded", function () {
@@ -47,8 +32,8 @@
 
         var map = L.map('map').setView([defaultLat, defaultLng], 13);
 
-        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-            attribution: '&copy; <a href="https://www.esri.com/">Esri</a> Contributors'
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
         }).addTo(map);
 
         var marker = L.marker([defaultLat, defaultLng], {
@@ -56,41 +41,17 @@
                 iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
                 shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
                 iconSize: [25, 41],
-                iconAnchor: [12, 41],
-                popupAnchor: [1, -34]
+                iconAnchor: [12, 41]
             })
         }).addTo(map);
 
-        function updateLocationField(lat, lng, address = "") {
-            let locationString = address ? address : `${lat}, ${lng}`;
-            
-            // Update the location input field
-            let locationInput = document.getElementById('Location');
-            locationInput.value = locationString;
+        function updateJotFormField(lat, lng, address) {
+            // Replace qXX_location with the actual JotForm field name
+            var locationField = window.parent.document.querySelector('[name="qXX_location"]');
 
-            // Ensure JotForm field is updated
-            let jotformLocationField = document.querySelector('input[name="qXX_location"]'); // Change 'qXX_location' to your JotForm field name
-            if (jotformLocationField) {
-                jotformLocationField.value = locationString;
-
-                // Dispatch an input event to ensure JotForm registers the change
-                let event = new Event('input', { bubbles: true });
-                jotformLocationField.dispatchEvent(event);
-            }
-
-            // Update the hidden latitude and longitude fields
-            document.getElementById('latitude').value = lat;
-            document.getElementById('longitude').value = lng;
-
-            // Send data to JotForm Parent Window (for embedded forms)
-            try {
-                window.parent.postMessage({
-                    latitude: lat,
-                    longitude: lng,
-                    address: locationString
-                }, "*");
-            } catch (error) {
-                console.error("Error sending postMessage:", error);
+            if (locationField) {
+                locationField.value = address || (lat + ', ' + lng);
+                locationField.dispatchEvent(new Event('input', { bubbles: true }));
             }
         }
 
@@ -98,12 +59,12 @@
             try {
                 const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`);
                 const data = await response.json();
-                let fullAddress = `${data.address.road || ""}, ${data.address.city || data.address.town || ""}, ${data.address.state || ""}, ${data.address.country || ""}`.trim();
+                let address = `${data.address.road || ""}, ${data.address.city || data.address.town || ""}, ${data.address.state || ""}, ${data.address.country || ""}`.trim();
                 
-                updateLocationField(lat, lng, fullAddress);
+                updateJotFormField(lat, lng, address);
             } catch (error) {
                 console.error("Reverse geocoding failed:", error);
-                updateLocationField(lat, lng);
+                updateJotFormField(lat, lng, lat + ', ' + lng);
             }
         }
 
@@ -114,6 +75,7 @@
             reverseGeocode(lat, lng);
         });
 
+        // Search Control
         var searchControl = L.Control.geocoder({
             geocoder: L.Control.Geocoder.nominatim(),
             defaultMarkGeocode: false
@@ -123,20 +85,6 @@
             map.setView(latlng, 15);
             reverseGeocode(latlng.lat, latlng.lng);
         }).addTo(map);
-
-        reverseGeocode(defaultLat, defaultLng);
-    });
-
-    // If the JotForm is inside an iframe, listen for messages
-    window.addEventListener("message", function(event) {
-        if (event.data.address) {
-            let jotformField = document.querySelector('input[name="qXX_location"]'); // Change 'qXX_location' to actual field name
-            if (jotformField) {
-                jotformField.value = event.data.address;
-                let event = new Event('input', { bubbles: true });
-                jotformField.dispatchEvent(event);
-            }
-        }
     });
     </script>
 
