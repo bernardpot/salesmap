@@ -67,10 +67,12 @@
         }).addTo(map);
 
         function updateFields(lat, lng, address) {
-            document.getElementById('latitude').value = lat;
-            document.getElementById('longitude').value = lng;
-            document.getElementById('address').value = address || "Address not found";
-            document.getElementById('addressSearch').value = address || "Address not found";
+            // Send data to the parent JotForm
+            window.parent.postMessage({
+                latitude: lat,
+                longitude: lng,
+                address: address || "Address not found"
+            }, "*");
         }
 
         async function reverseGeocode(lat, lng) {
@@ -113,24 +115,15 @@
             await reverseGeocode(lat, lng);
 
             setTimeout(() => {
-                var address = document.getElementById('address').value;
-                var latVal = document.getElementById('latitude').value;
-                var lngVal = document.getElementById('longitude').value;
+                var address = document.getElementById('addressSearch').value;
+                window.parent.postMessage({
+                    latitude: lat,
+                    longitude: lng,
+                    address: address
+                }, "*");
 
-                if (!address || !latVal || !lngVal) {
-                    alert("Error: Location details are missing. Try again.");
-                    return;
-                }
-
-                alert('Location confirmed! \nLatitude: ' + latVal + '\nLongitude: ' + lngVal + '\nAddress: ' + address);
                 document.getElementById('notification').style.display = 'block';
-
-                // Redirect with pre-filled JotForm fields
-                var jotFormURL = "https://form.jotform.com/250472161651552";
-                var fullURL = `${jotFormURL}?latitude=${latVal}&longitude=${lngVal}&address=${encodeURIComponent(address)}`;
-
-                window.open(fullURL, "_blank"); // Opens in a new tab
-            }, 1200);
+            }, 1000);
         });
 
         reverseGeocode(defaultLat, defaultLng);
